@@ -42,13 +42,17 @@ export function Header() {
           </nav>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <Github className="h-4 w-4 mr-2" />
-              GitHub
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="https://github.com/arturwyroslak/tenki-clone" target="_blank">
+                <Github className="h-4 w-4 mr-2" />
+                GitHub
+              </Link>
             </Button>
-            <Button size="sm" className="tenki-gradient text-white">
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
+            <Button size="sm" className="tenki-gradient text-white" asChild>
+              <Link href="/login">
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Link>
             </Button>
           </div>
           
@@ -84,13 +88,17 @@ export function Header() {
                   </Link>
                 ))}
                 <div className="flex flex-col space-y-2 pt-4 border-t">
-                  <Button variant="ghost" size="sm" className="justify-start">
-                    <Github className="h-4 w-4 mr-2" />
-                    GitHub
+                  <Button variant="ghost" size="sm" className="justify-start" asChild>
+                    <Link href="https://github.com/arturwyroslak/tenki-clone" target="_blank">
+                      <Github className="h-4 w-4 mr-2" />
+                      GitHub
+                    </Link>
                   </Button>
-                  <Button size="sm" className="tenki-gradient text-white justify-start">
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign In
+                  <Button size="sm" className="tenki-gradient text-white justify-start" asChild>
+                    <Link href="/login">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Link>
                   </Button>
                 </div>
               </div>
