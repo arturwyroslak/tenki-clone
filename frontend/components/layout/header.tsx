@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Github, LogIn } from 'lucide-react';
+import { Menu, X, Github, LogIn, LayoutDashboard, BarChart3, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
@@ -13,8 +13,20 @@ const navItems = [
   { name: 'Status', href: '/status' },
 ];
 
+const dashboardItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
+];
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -30,15 +42,32 @@ export function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {isLoggedIn ? (
+              <>
+                {dashboardItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-gray-600 hover:text-gray-900 transition-colors font-medium flex items-center gap-2"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                ))}
+              </>
+            ) : (
+              <>
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
           
           <div className="hidden md:flex items-center space-x-4">
@@ -48,12 +77,25 @@ export function Header() {
                 GitHub
               </Link>
             </Button>
-            <Button size="sm" className="tenki-gradient text-white" asChild>
-              <Link href="/login">
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In
-              </Link>
-            </Button>
+            {isLoggedIn ? (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  window.location.href = '/';
+                }}
+              >
+                Sign Out
+              </Button>
+            ) : (
+              <Button size="sm" className="tenki-gradient text-white" asChild>
+                <Link href="/login">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </Link>
+              </Button>
+            )}
           </div>
           
           <button
@@ -77,16 +119,34 @@ export function Header() {
               className="md:hidden border-t bg-white"
             >
               <div className="py-4 space-y-4">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="block text-gray-600 hover:text-gray-900 font-medium"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {isLoggedIn ? (
+                  <>
+                    {dashboardItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block text-gray-600 hover:text-gray-900 font-medium flex items-center gap-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </Link>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block text-gray-600 hover:text-gray-900 font-medium"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </>
+                )}
                 <div className="flex flex-col space-y-2 pt-4 border-t">
                   <Button variant="ghost" size="sm" className="justify-start" asChild>
                     <Link href="https://github.com/arturwyroslak/tenki-clone" target="_blank">
@@ -94,12 +154,26 @@ export function Header() {
                       GitHub
                     </Link>
                   </Button>
-                  <Button size="sm" className="tenki-gradient text-white justify-start" asChild>
-                    <Link href="/login">
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
-                    </Link>
-                  </Button>
+                  {isLoggedIn ? (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        localStorage.removeItem('token');
+                        window.location.href = '/';
+                      }}
+                    >
+                      Sign Out
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="tenki-gradient text-white justify-start" asChild>
+                      <Link href="/login">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>
