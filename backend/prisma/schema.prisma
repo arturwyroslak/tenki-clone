@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  name          String?
+  githubId      String?     @unique
+  githubToken   String?
+  avatarUrl     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  workspaceMembers WorkspaceMember[]
+  createdWorkspaces Workspace[] @relation("WorkspaceCreator")
+  
+  @@map("users")
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  creatorId   String
+  creator     User     @relation("WorkspaceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  members     WorkspaceMember[]
+  projects    Project[]
+  runners     Runner[]
+  usage       Usage[]
+  invoices    Invoice[]
+  
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  role        Role     @default(STANDARD)
+  joinedAt    DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, workspaceId])
+  @@map("workspace_members")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  githubRepo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  workflows   Workflow[]
+  
+  @@map("projects")
+}
+
+model Runner {
+  id          String       @id @default(uuid())
+  name        String
+  type        RunnerType
+  status      RunnerStatus @default(IDLE)
+  ipAddress   String?
+  cores       Int
+  memory      Int
+  pricePerMin Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  workflowRuns WorkflowRun[]
+  
+  @@map("runners")
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  fileName    String
+  content     String   @db.Text
+  githubPath  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  runs        WorkflowRun[]
+  
+  @@map("workflows")
+}
+
+model WorkflowRun {
+  id          String         @id @default(uuid())
+  status      WorkflowStatus @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?
+  cost        Float?
+  logs        String?        @db.Text
+  createdAt   DateTime       @default(now())
+  
+  workflowId  String
+  workflow    Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
+  runnerId    String?
+  runner      Runner?        @relation(fields: [runnerId], references: [id], onDelete: SetNull)
+  
+  @@map("workflow_runs")
+}
+
+model Usage {
+  id          String   @id @default(uuid())
+  minutes     Int
+  cost        Float
+  date        DateTime @default(now())
+  
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  @@map("usage")
+}
+
+model Invoice {
+  id          String        @id @default(uuid())
+  amount      Float
+  status      InvoiceStatus @default(PENDING)
+  periodStart DateTime
+  periodEnd   DateTime
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  @@map("invoices")
+}
+
+model Migration {
+  id          String          @id @default(uuid())
+  status      MigrationStatus @default(PENDING)
+  githubRepo  String
+  totalWorkflows Int          @default(0)
+  migratedWorkflows Int       @default(0)
+  errors      String?         @db.Text
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  
+  @@map("migrations")
+}
+
+enum Role {
+  ADMIN
+  STANDARD
+}
+
+enum RunnerType {
+  SMALL_2C_4G
+  MEDIUM_4C_8G
+  LARGE_8C_16G
+  LARGE_PLUS_16C_32G
+  AUTOSCALE
+}
+
+enum RunnerStatus {
+  IDLE
+  BUSY
+  OFFLINE
+  ERROR
+}
+
+enum WorkflowStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum MigrationStatus {
+  PENDING
+  ANALYZING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}

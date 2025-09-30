@@ -75,4 +75,4 @@ temp/
 .vercel
 
 # Local development
-.local
+.local/backend/dist/
